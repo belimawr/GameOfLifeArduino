@@ -1,2 +1,2 @@
-# GameOfLifeArduino
-An implementation of the Game Of Life for Arduino
+# WolframCellularAutomataArduino
+An implementation of the Wolfram Cellular Automata for Arduino
