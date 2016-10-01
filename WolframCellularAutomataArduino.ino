@@ -1,9 +1,10 @@
-/* Autômatos celulares de Wolfram / baseado no código de Daniel Shiffman
-   http://natureofcode.com
-   Adaptado para Arduino por Tiago Queiroz
-   Para objeto animado concebido por Alexandre Villares
-   Apresentado em outubro de 2016
+/* 
+   Tiago Queiroz e Alexandre Villares
+   Matriz 8x8 animada com Arduino
+   Objeto apresentado em outubro de 2016
    em Zonas de Compensação / IA-UNESP / São Paulo
+   Baseado nos Autômatos celulares de Wolfram
+   e no código de Daniel Shiffman http://natureofcode.com
 */
 
 int generation; // Contador de gerações
