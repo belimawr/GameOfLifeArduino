@@ -1,15 +1,20 @@
-/* 
-   Tiago Queiroz e Alexandre Villares
-   Matriz 8x8 animada com Arduino
-   Objeto apresentado em outubro de 2016
+/* Autômatos celulares de Wolfram / baseado no código de Daniel Shiffman
+   http://natureofcode.com
+   Adaptado para Arduino por Tiago Queiroz
+   Para objeto animado concebido por Alexandre Villares
+   Apresentado em outubro de 2016
    em Zonas de Compensação / IA-UNESP / São Paulo
-   Baseado nos Autômatos celulares de Wolfram
-   e no código de Daniel Shiffman http://natureofcode.com
 */
 
+#include <Wire.h>
+#include "Adafruit_LEDBackpack.h"
+#include "Adafruit_GFX.h"
+
+Adafruit_8x8matrix matrixLED = Adafruit_8x8matrix();
+
 int generation; // Contador de gerações
-int w = 10;
 int matrix[8][8];  // matriz com histórico de gerações
+int display[8][8];
 int cols = 8;
 int rows = 8 ;
 
@@ -20,18 +25,32 @@ int ruleset[] = {0, 1, 1, 1, 1, 0, 0, 0};    // Rule 30
 //int ruleset[] = {0,1,1,1,0,1,1,0};             // Rule 110
 
 void setup() {
+  pinMode(6, OUTPUT);
+  pinMode(7, INPUT);
+
+  digitalWrite(6, HIGH);
+
   Serial.begin(9600);
   randomSeed(analogRead(0));
   inicializa();  // Inicializa a matriz do Autômato Celular
+
+  matrixLED.begin(0x70);  // pass in the address
+  generation = 0;
 }
 
 void loop() {
-  mostra();   // Manda para a matriz de LEDs
-  regenera();
-  delay(2000);
+  if (digitalRead(7) == HIGH) {
+    randomiza();
+    inicializa();
+  } else {
+    matrixLED.clear();
+    mostra();   // Manda para a matriz de LEDs
+    aplicaRegra();
+  }
+  delay(500);
 }
 
-// Escolhedor de 'regra' aleatória
+//Escolhedor de 'regra' aleatória
 void randomiza() {
   for (int i = 0; i < 8; i++) {
     ruleset[i] = int(random(2));
@@ -47,10 +66,12 @@ void inicializa() {
   }
   matrix[cols / 2][0] = 1; // Tudo começa com "1"(vivo/ligado) no meio da primeira linha
   generation = 0;         //na geração/tempo zero
+  mostra();
+  delay(2000);
 }
 
 // O método que calcula a próxima geração/tempo
-void regenera() {
+void aplicaRegra() {
   // Para cada célula, determine o próximo estado, baseado no estado atual
   // e nos vizinhos imediatos, ignorando o das bordas
   for (int i = 0; i < cols; i++) {
@@ -60,12 +81,12 @@ void regenera() {
     matrix[i][(generation + 1) % rows] = rules(esq, eu, dir); // Calcula usando a 'regra'
   }
   generation++;
+
 }
 
 // Método que desenha a matriz
-void mostra() {
+void mostra(){
   int offset = generation % rows;
-  Serial.println("--------------------------------");
   for (int i = 0; i < cols; i++) {
     for (int j = 0; j < rows; j++) {
       int y = j - offset;
@@ -74,17 +95,16 @@ void mostra() {
         y = rows + y;
       }
 
-      if (matrix[i][i] == 1) {
-        Serial.print(0);
+      if (matrix[i][j] == 1) {
+        matrixLED.drawPixel(i, y-1, 0);
       }
       else {
-        Serial.print(1);
+        matrixLED.drawPixel(i, y-1, 1);
       }
-    }
-    Serial.println("");
-  }
 
-  Serial.println("\n\n");
+    }
+  }
+  matrixLED.writeDisplay();
 }
 
 // Implementação das regras de Wolfram
