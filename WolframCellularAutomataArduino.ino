@@ -1,9 +1,9 @@
-/* Autômatos celulares de Wolfram / baseado no código de Daniel Shiffman
-   http://natureofcode.com
-   Adaptado para Arduino por Tiago Queiroz
-   Para objeto animado concebido por Alexandre Villares
-   Apresentado em outubro de 2016
+/* Tiago Queiroz e Alexandre Villares
+   Matriz 8x8 animada com Arduino
+   Objeto apresentado em outubro de 2016
    em Zonas de Compensação / IA-UNESP / São Paulo
+   Baseado nos Autômatos celulares de Wolfram
+   e código de Daniel Shiffman http://natureofcode.com
 */
 
 #include <Wire.h>
@@ -12,102 +12,93 @@
 
 Adafruit_8x8matrix matrixLED = Adafruit_8x8matrix();
 
-int generation; // Contador de gerações
-int matrix[8][8];  // matriz com histórico de gerações
-int display[8][8];
+int generation;  // Contador de gerações
+int matrix[8][8];// Matriz com histórico de gerações
 int cols = 8;
 int rows = 8 ;
-
-//ruleset é o Array com a regra {0,1,1,0,1,1,0,1}
-//int ruleset[] = {0,1,1,1,1,0,1,1};           // Rule 222
-//int ruleset[] = {0,1,1,1,1,1,0,1};           // Rule 190
-int ruleset[] = {0, 1, 1, 1, 1, 0, 0, 0};    // Rule 30
-//int ruleset[] = {0,1,1,1,0,1,1,0};             // Rule 110
+int ruleset[8];  // Array de 1s e 0s de uma 'regra'
+int regrasLegais[4][8] {    // Algumas regras de que gostamos
+  {0, 1, 1, 1, 1, 0, 1, 1}, // Regra
+  {0, 1, 1, 1, 1, 1, 0, 1}, // Regra
+  {0, 1, 1, 1, 1, 0, 0, 0}, // Regra
+  {0, 1, 1, 1, 0, 1, 1, 0}  // Regra
+};
 
 void setup() {
-  pinMode(6, OUTPUT);
-  pinMode(7, INPUT);
-
-  digitalWrite(6, HIGH);
-
   Serial.begin(9600);
-  randomSeed(analogRead(0));
+  randomSeed(analogRead(5));
+  matrixLED.begin(0x70);  // Avisa o endereço da matriz LED
   inicializa();  // Inicializa a matriz do Autômato Celular
-
-  matrixLED.begin(0x70);  // pass in the address
-  generation = 0;
+  sorteiaRegra();
 }
 
 void loop() {
-  if (digitalRead(7) == HIGH) {
-    randomiza();
+  matrixLED.clear();
+  mostra();   // Manda para a matriz de LEDs
+  aplicaRegra();
+  delay(500);
+  if (generation == 128) { //e Es
     inicializa();
-  } else {
-    matrixLED.clear();
-    mostra();   // Manda para a matriz de LEDs
-    aplicaRegra();
+    sorteiaRegra();
   }
+}
+
+//Sorteia uma das 'regras' escolhidas pelos autores
+void sorteiaRegra() {
+  int sorteio = int(random(4));
+  Serial.println(sorteio);
+  for (int i = 0; i < 8; i++) {
+    ruleset[i] = regrasLegais[sorteio][i];
+  }
+}
+
+// Restaura matriz para geração (ou tempo) zero
+void inicializa() {
+  generation = 0; // Zera contador de geração/tempo
+  for (int i = 0; i < cols; i++) {
+    for (int j = 0; j < rows; j++) {
+      matrix[i][j] = 0;  // Zera células
+    }
+  }
+  matrix[cols / 2][0] = 1; // Começa com "1" no meio da primeira linha
+  mostra();
   delay(500);
 }
 
-//Escolhedor de 'regra' aleatória
-void randomiza() {
-  for (int i = 0; i < 8; i++) {
-    ruleset[i] = int(random(2));
-  }
-}
-
-// Reset para geração/tempo 0
-void inicializa() {
-  for (int i = 0; i < cols; i++) {
-    for (int j = 0; j < rows; j++) {
-      matrix[i][j] = 0;
-    }
-  }
-  matrix[cols / 2][0] = 1; // Tudo começa com "1"(vivo/ligado) no meio da primeira linha
-  generation = 0;         //na geração/tempo zero
-  mostra();
-  delay(2000);
-}
-
-// O método que calcula a próxima geração/tempo
+// Calcula a próxima geração/tempo
 void aplicaRegra() {
   // Para cada célula, determine o próximo estado, baseado no estado atual
-  // e nos vizinhos imediatos, ignorando o das bordas
+  // e nas vizinhas imediatas, ignorando a das bordas
   for (int i = 0; i < cols; i++) {
-    int esq  = matrix[(i + cols - 1) % cols][generation % rows]; // Estado do vizinho à esquerda
+    int esq  = matrix[(i + cols - 1) % cols][generation % rows]; // Estado da vizinha esquerda
     int eu    = matrix[i][generation % rows];            // Estado atual da célula
-    int dir = matrix[(i + 1) % cols][generation % rows]; // Estado do vizinho à direita
-    matrix[i][(generation + 1) % rows] = rules(esq, eu, dir); // Calcula usando a 'regra'
+    int dir = matrix[(i + 1) % cols][generation % rows]; // Estado da vizinha direita
+    matrix[i][(generation + 1) % rows] = rules(esq, eu, dir); // Calcula usando 'a regra'
   }
   generation++;
 
 }
 
-// Método que desenha a matriz
-void mostra(){
+// Desenha a matriz no autômato na matriz de LEDs
+void mostra() {
   int offset = generation % rows;
   for (int i = 0; i < cols; i++) {
     for (int j = 0; j < rows; j++) {
       int y = j - offset;
-
       if (y <= 0) {
         y = rows + y;
       }
-
-      if (matrix[i][j] == 1) {
-        matrixLED.drawPixel(i, y-1, 0);
+      if (matrix[i][j] == 1) {  // Se a célula i,j está viva/ativa/1
+        matrixLED.drawPixel(i, y - 1, 0); // Desligar LED
+      } else {                            // Senão
+        matrixLED.drawPixel(i, y - 1, 1); // Ligar LED
       }
-      else {
-        matrixLED.drawPixel(i, y-1, 1);
-      }
-
     }
   }
-  matrixLED.writeDisplay();
+  matrixLED.writeDisplay(); /
 }
 
-// Implementação das regras de Wolfram
+// Aplicação de regra do autômato celular de Wolfram numa célula
 int rules (int esquerda, int centro, int direita) {
   if (esquerda == 1 && centro == 1 && direita == 1) return ruleset[7];
   if (esquerda == 1 && centro == 1 && direita == 0) return ruleset[6];
