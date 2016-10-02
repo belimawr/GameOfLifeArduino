@@ -20,11 +20,16 @@ int rows = 8 ;
 
 //ruleset é o Array com a regra {0,1,1,0,1,1,0,1}
 //int ruleset[] = {0,1,1,1,1,0,1,1};           // Rule 222
-int ruleset[] = {0,1,1,1,1,1,0,1};           // Rule 190
-//int ruleset[] = {0, 1, 1, 1, 1, 0, 0, 0};    // Rule 30
+//int ruleset[] = {0,1,1,1,1,1,0,1};           // Rule 190
+int ruleset[] = {0, 1, 1, 1, 1, 0, 0, 0};    // Rule 30
 //int ruleset[] = {0,1,1,1,0,1,1,0};             // Rule 110
 
 void setup() {
+  pinMode(6, OUTPUT);
+  pinMode(7, INPUT);
+
+  digitalWrite(6, HIGH);
+
   Serial.begin(9600);
   randomSeed(analogRead(0));
   inicializa();  // Inicializa a matriz do Autômato Celular
@@ -34,19 +39,23 @@ void setup() {
 }
 
 void loop() {
-  matrixLED.clear();
-  scroll();
-  mostra();   // Manda para a matriz de LEDs
-  aplicaRegra();
+  if (digitalRead(7) == HIGH) {
+    randomiza();
+    inicializa();
+  } else {
+    matrixLED.clear();
+    mostra();   // Manda para a matriz de LEDs
+    aplicaRegra();
+  }
   delay(500);
 }
 
-// Escolhedor de 'regra' aleatória
-// void randomiza() {
-//   for (int i = 0; i < 8; i++) {
-//     ruleset[i] = int(random(2));
-//   }
-// }
+//Escolhedor de 'regra' aleatória
+void randomiza() {
+  for (int i = 0; i < 8; i++) {
+    ruleset[i] = int(random(2));
+  }
+}
 
 // Reset para geração/tempo 0
 void inicializa() {
@@ -76,16 +85,7 @@ void aplicaRegra() {
 }
 
 // Método que desenha a matriz
-void mostra() {
-  for (int i = 0; i < cols; i++) {
-    for (int j = 0; j < rows; j++) {
-      matrixLED.drawPixel(i, j, display[i][j]);
-    }
-  }
-  matrixLED.writeDisplay();
-}
-
-void scroll(){
+void mostra(){
   int offset = generation % rows;
   for (int i = 0; i < cols; i++) {
     for (int j = 0; j < rows; j++) {
@@ -96,14 +96,15 @@ void scroll(){
       }
 
       if (matrix[i][j] == 1) {
-        display[i][y-1] = 0;
+        matrixLED.drawPixel(i, y-1, 0);
       }
       else {
-        display[i][y-1] = 1;
+        matrixLED.drawPixel(i, y-1, 1);
       }
 
     }
   }
+  matrixLED.writeDisplay();
 }
 
 // Implementação das regras de Wolfram
