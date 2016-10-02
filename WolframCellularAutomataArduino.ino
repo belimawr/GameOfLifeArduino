@@ -6,36 +6,47 @@
    em Zonas de Compensação / IA-UNESP / São Paulo
 */
 
+#include <Wire.h>
+#include "Adafruit_LEDBackpack.h"
+#include "Adafruit_GFX.h"
+
+Adafruit_8x8matrix matrixLED = Adafruit_8x8matrix();
+
 int generation; // Contador de gerações
-int w = 10;
 int matrix[8][8];  // matriz com histórico de gerações
+int display[8][8];
 int cols = 8;
 int rows = 8 ;
 
 //ruleset é o Array com a regra {0,1,1,0,1,1,0,1}
 //int ruleset[] = {0,1,1,1,1,0,1,1};           // Rule 222
-//int ruleset[] = {0,1,1,1,1,1,0,1};           // Rule 190
-int ruleset[] = {0, 1, 1, 1, 1, 0, 0, 0};    // Rule 30
+int ruleset[] = {0,1,1,1,1,1,0,1};           // Rule 190
+//int ruleset[] = {0, 1, 1, 1, 1, 0, 0, 0};    // Rule 30
 //int ruleset[] = {0,1,1,1,0,1,1,0};             // Rule 110
 
 void setup() {
   Serial.begin(9600);
   randomSeed(analogRead(0));
   inicializa();  // Inicializa a matriz do Autômato Celular
+
+  matrixLED.begin(0x70);  // pass in the address
+  generation = 0;
 }
 
 void loop() {
+  matrixLED.clear();
+  scroll();
   mostra();   // Manda para a matriz de LEDs
-  regenera();
-  delay(2000);
+  aplicaRegra();
+  delay(500);
 }
 
 // Escolhedor de 'regra' aleatória
-void randomiza() {
-  for (int i = 0; i < 8; i++) {
-    ruleset[i] = int(random(2));
-  }
-}
+// void randomiza() {
+//   for (int i = 0; i < 8; i++) {
+//     ruleset[i] = int(random(2));
+//   }
+// }
 
 // Reset para geração/tempo 0
 void inicializa() {
@@ -46,10 +57,12 @@ void inicializa() {
   }
   matrix[cols / 2][0] = 1; // Tudo começa com "1"(vivo/ligado) no meio da primeira linha
   generation = 0;         //na geração/tempo zero
+  mostra();
+  delay(2000);
 }
 
 // O método que calcula a próxima geração/tempo
-void regenera() {
+void aplicaRegra() {
   // Para cada célula, determine o próximo estado, baseado no estado atual
   // e nos vizinhos imediatos, ignorando o das bordas
   for (int i = 0; i < cols; i++) {
@@ -59,12 +72,21 @@ void regenera() {
     matrix[i][(generation + 1) % rows] = rules(esq, eu, dir); // Calcula usando a 'regra'
   }
   generation++;
+
 }
 
 // Método que desenha a matriz
 void mostra() {
+  for (int i = 0; i < cols; i++) {
+    for (int j = 0; j < rows; j++) {
+      matrixLED.drawPixel(i, j, display[i][j]);
+    }
+  }
+  matrixLED.writeDisplay();
+}
+
+void scroll(){
   int offset = generation % rows;
-  Serial.println("--------------------------------");
   for (int i = 0; i < cols; i++) {
     for (int j = 0; j < rows; j++) {
       int y = j - offset;
@@ -73,17 +95,15 @@ void mostra() {
         y = rows + y;
       }
 
-      if (matrix[i][i] == 1) {
-        Serial.print(0);
+      if (matrix[i][j] == 1) {
+        display[i][y-1] = 0;
       }
       else {
-        Serial.print(1);
+        display[i][y-1] = 1;
       }
-    }
-    Serial.println("");
-  }
 
-  Serial.println("\n\n");
+    }
+  }
 }
 
 // Implementação das regras de Wolfram
