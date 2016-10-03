@@ -17,11 +17,15 @@ int matrix[8][8];// Matriz com histórico de gerações
 int cols = 8;
 int rows = 8 ;
 int ruleset[8];  // Array de 1s e 0s de uma 'regra'
-int regrasLegais[4][8] {    // Algumas regras de que gostamos
-  {0, 1, 1, 1, 1, 0, 1, 1}, // Regra
-  {0, 1, 1, 1, 1, 1, 0, 1}, // Regra
-  {0, 1, 1, 1, 1, 0, 0, 0}, // Regra
-  {0, 1, 1, 1, 0, 1, 1, 0}  // Regra
+int regrasLegais[8][8] {    // Algumas regras de que gostamos
+  {1, 0, 1, 1, 1, 1, 1, 0}, // Regra 125
+  {1, 0, 0, 1, 0, 1, 0, 1}, // Regra 169
+  {0, 1, 1, 1, 1, 0, 0, 0}, // Regra 30
+  {0, 1, 1, 1, 0, 1, 1, 0}, // Regra 110
+  {1, 0, 0, 0, 1, 1, 1, 0}, // degraus diagonais
+  {1, 1, 0, 0, 1, 0, 0, 1}, // triângulos pequenos
+  {1, 0, 0, 1, 0, 0, 1, 0}, // colchetes e pontos
+  {1, 0, 0, 0, 0, 1, 0, 1}  // triângulos invertidos
 };
 
 void setup() {
@@ -45,7 +49,7 @@ void loop() {
 
 //Sorteia uma das 'regras' escolhidas pelos autores
 void sorteiaRegra() {
-  int sorteio = int(random(4));
+  int sorteio = int(random(8));
   Serial.println(sorteio);
   for (int i = 0; i < 8; i++) {
     ruleset[i] = regrasLegais[sorteio][i];
