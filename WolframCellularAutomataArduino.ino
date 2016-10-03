@@ -105,7 +105,7 @@ void mostra() {
   matrixLED.writeDisplay();
 }
 
-// Aplicação de regra dos autômato celulares de Wolfram numa célula
+// Aplicação de regra dos autômatos celulares de Wolfram numa célula
 int rules (int esquerda, int centro, int direita) {
   if (esquerda == 1 && centro == 1 && direita == 1) return ruleset[7];
   if (esquerda == 1 && centro == 1 && direita == 0) return ruleset[6];
