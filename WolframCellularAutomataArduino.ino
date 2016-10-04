@@ -30,7 +30,6 @@ int regrasLegais[8][8] {    // Algumas regras de que gostamos
 };
 
 void setup() {
-  // Serial.begin(9600);  // Comunicação serial para debug
   matrixLED.begin(0x70);  // Avisa o endereço da matriz LED
   randomSeed(analogRead(5)); // Configura o gerador de aleatórios
   sorteiaRegra(); // Escolhe uma das 8 regras eleitas
