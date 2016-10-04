@@ -1,5 +1,6 @@
 /* Tiago Queiroz e Alexandre Villares
    Matriz 8x8 animada com Arduino
+   https://github.com/belimawr/WolframCellularAutomataArduino
    Objeto apresentado em outubro de 2016
    em Zonas de Compensação / IA-UNESP / São Paulo
    Baseado nos Autômatos celulares de Wolfram
@@ -29,7 +30,7 @@ int regrasLegais[8][8] {    // Algumas regras de que gostamos
 };
 
 void setup() {
-  Serial.begin(9600);
+  // Serial.begin(9600);  // Comunicação serial para debug
   matrixLED.begin(0x70);  // Avisa o endereço da matriz LED
   randomSeed(analogRead(5)); // Configura o gerador de aleatórios
   sorteiaRegra(); // Escolhe uma das 8 regras eleitas
@@ -50,7 +51,6 @@ void loop() {
 //Sorteia uma das 'regras' escolhidas pelos autores
 void sorteiaRegra() {
   int sorteio = int(random(8));
-  Serial.println(sorteio);
   for (int i = 0; i < 8; i++) {
     ruleset[i] = regrasLegais[sorteio][i];
   }
